@@ -1,4 +1,4 @@
-Add-Type –AssemblyName System.Web
+Add-Type -AssemblyName System.Web
 
 function google([Parameter(ValueFromRemainingArguments=$true)][string]$s) {
     function write-bold([string]$s) {
