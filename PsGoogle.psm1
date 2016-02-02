@@ -1,4 +1,5 @@
 Add-Type -AssemblyName System.Web
+Add-Type -AssemblyName System.Management.Automation
 
 function google([Parameter(ValueFromRemainingArguments=$true)][string]$s) {
     function write-bold([string]$s) {
@@ -30,9 +31,10 @@ function google([Parameter(ValueFromRemainingArguments=$true)][string]$s) {
 }
 
 if (gcm Register-ArgumentCompleter -ea Ignore) {
-    Register-ArgumentCompleter -Command 'google' -Parameter 's' -ScriptBlock {
+    Register-ArgumentCompleter -Command 'google' -Parameter 's' -Script {
         param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameter)
         (irm "https://suggestqueries.google.com/complete/search?output=xml&q=$([Web.HttpUtility]::UrlEncode($wordToComplete))").SelectNodes("/toplevel/CompleteSuggestion/*") | % {
-            New-CompletionResult $_.data }
+            new-object Management.Automation.CompletionResult($_.data)
+        }
     }
 }
