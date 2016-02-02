@@ -28,3 +28,11 @@ function google([Parameter(ValueFromRemainingArguments=$true)][string]$s) {
         }
     }
 }
+
+if (gcm Register-ArgumentCompleter -ea Ignore) {
+    Register-ArgumentCompleter -Command 'google' -Parameter 's' -ScriptBlock {
+        param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameter)
+        (irm "https://suggestqueries.google.com/complete/search?output=xml&q=$([Web.HttpUtility]::UrlEncode($wordToComplete))").SelectNodes("/toplevel/CompleteSuggestion/*") | % {
+            New-CompletionResult $_.data }
+    }
+}
