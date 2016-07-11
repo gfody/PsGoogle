@@ -2,6 +2,10 @@ A "google" command for powershell, e.g.:
 
 ![Screenshot](screenshot.png)
 
+specify `-o` to return objects, the parameter is how many pages to retrieve:
+
+![Screenshot](screenshot2.png)
+
 # install #
 ```install-module psgoogle``` (requires [PsGet](http://psget.net) or Powershell V5 or Win10)
 
