@@ -24,15 +24,12 @@ function google([Parameter(Position=0,Mandatory=$true,ValueFromRemainingArgument
     $page = 0; $i = 1
     while (!$o -or $o -gt $page) {
         $raw = irm "https://www.google.com/search?q=$([Web.HttpUtility]::UrlEncode($q))&start=$(($page++)*10)"
+        $stats = ([regex]'id="resultStats">(.*?)<').match($raw).groups[1].value
+        if (!$stats) { if (!$o -and $i -eq 1) { write-host -foreground red "`nno results.`n" }; break }
         if ($o) { parse-results $raw } else {
-            $stats = ([regex]'id="resultStats">(.*?)<').match($raw)
-            if (!$stats.success -and $c -gt 1) { break } elseif (!$stats.success) { write-host -foreground red "`nno results.`n"; break }
-            write-host -foreground yellow "`n$($stats.groups[1].value)`n"
-
             $info = ([regex]'id="topstuff">(?:<(?!h3)[^>]*?>)+(?![<[])(.+?)</div>').match($raw)
-            if ($info.success) { write-host -foreground green ([Web.HttpUtility]::HtmlDecode(($info.groups[1].value -replace '<.*?>', ' ' -replace ' {2,}', ' ')).Trim()) }
-            write-host
-
+            if ($info.success) { write-host -foreground green "`n$([Web.HttpUtility]::HtmlDecode(($info.groups[1].value -replace '<.*?>', ' ' -replace ' {2,}', ' ')).Trim())" }
+            write-host -foreground yellow "`n$stats`n"
             parse-results $raw | % {
                 write-bold "$(($i++)). $($_.title)"
                 write-host -foreground darkcyan $_.url
