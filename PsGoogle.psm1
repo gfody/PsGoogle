@@ -1,7 +1,7 @@
 Add-Type -AssemblyName System.Web
 Add-Type -AssemblyName System.Management.Automation
 
-function google([Parameter(Position=0,Mandatory=$true,ValueFromRemainingArguments=$true)][string]$q, [int]$o) {
+function google([Parameter(Position=0, Mandatory=$true, ValueFromRemainingArguments = $true)][string]$q, [int]$n = 4, [switch]$o) {
     function parse-results([string]$html) {
         $reg = new-object Text.RegularExpressions.Regex('class="r"><a href="/url\?q=(.*?)&amp;sa=.*?>(.*?)</a.*?<span class="st">(.*?)</span',
             @([Text.RegularExpressions.RegexOptions]::IgnoreCase, [Text.RegularExpressions.RegexOptions]::Singleline, [Text.RegularExpressions.RegexOptions]::Compiled))
@@ -9,7 +9,7 @@ function google([Parameter(Position=0,Mandatory=$true,ValueFromRemainingArgument
             new-object PSObject -prop @{
                 'url' = [Web.HttpUtility]::UrlDecode([Web.HttpUtility]::UrlDecode($_.groups[1].value))
                 'title' = [Web.HttpUtility]::HtmlDecode($_.groups[2].value)
-                'summary' = [Web.HttpUtility]::HtmlDecode(($_.groups[3].value -replace '(?!</?b>)<.*?>', '')).Replace("`n", "")
+                'summary' = [Web.HttpUtility]::HtmlDecode(($_.groups[3].value -replace '(?!</?b>)<.*?>', '')).Replace("`n", "").Trim()
             }
         }
     }
@@ -21,11 +21,12 @@ function google([Parameter(Position=0,Mandatory=$true,ValueFromRemainingArgument
         write-host
     }
 
-    $page = 0; $i = 1
-    while (!$o -or $o -gt $page) {
-        $raw = irm "https://www.google.com/search?q=$([Web.HttpUtility]::UrlEncode($q))&start=$(($page++)*10)"
+    $num = if ($n -gt 100) { 100 } else { $n }; $start = 0
+    while (!$o -or $start -lt $n) {
+        $raw = irm "https://www.google.com/search?q=$([Web.HttpUtility]::UrlEncode($q))&start=$start&num=$num"
         $stats = ([regex]'id="resultStats">(.*?)<').match($raw).groups[1].value
-        if (!$stats) { if (!$o -and $i -eq 1) { write-host -foreground red "`nno results.`n" }; break }
+        if (!$stats) { if (!$o -and $start -eq 0) { write-host -foreground red "`nno results.`n" }; break }
+        $i = $start + 1; $start += $num
         if ($o) { parse-results $raw } else {
             $info = ([regex]'id="topstuff">(?:<(?!h3)[^>]*?>)+(?![<[])(.+?)</div>').match($raw)
             if ($info.success) { write-host -foreground green "`n$([Web.HttpUtility]::HtmlDecode(($info.groups[1].value -replace '<.*?>', ' ' -replace ' {2,}', ' ')).Trim())" }
@@ -33,13 +34,12 @@ function google([Parameter(Position=0,Mandatory=$true,ValueFromRemainingArgument
             parse-results $raw | % {
                 write-bold "$(($i++)). $($_.title)"
                 write-host -foreground darkcyan $_.url
-                write-bold $_.summary
+                if (![string]::isNullOrWhitespace($_.summary)) { write-bold $_.summary }
                 write-host
-                if ($i % 5 -eq 0) {
-                    write-host "any key for more results, q to quit.."
-                    if ([Console]::ReadKey($true).Key -eq "q") { break }
-                    write-host
-                }
+            }
+            if (([regex]'>Next</span>').match($raw).success) {
+                write-host "any key for more results, q to quit..`n"
+                if ([Console]::ReadKey($true).Key -eq "q") { break }
             }
         }
     }

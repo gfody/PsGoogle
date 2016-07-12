@@ -2,7 +2,7 @@ A "google" command for powershell, e.g.:
 
 ![Screenshot](screenshot.png)
 
-specify `-o` to return objects, the parameter is how many pages to retrieve:
+specify `-o` to return objects, `-n` results to retrieve (default is 4)
 
 ![Screenshot](screenshot2.png)
 
