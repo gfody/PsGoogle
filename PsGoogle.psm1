@@ -37,7 +37,7 @@ function google([Parameter(Position=0, Mandatory=$true, ValueFromRemainingArgume
                 if (![string]::isNullOrWhitespace($_.summary)) { write-bold $_.summary }
                 write-host
             }
-            if (([regex]'>Next</span>').match($raw).success) {
+            if (([regex]'position:-96px 0;width:71px').match($raw).success) {
                 write-host "any key for more results, q to quit..`n"
                 if ([Console]::ReadKey($true).Key -eq "q") { break }
             }
