@@ -19,6 +19,7 @@ function Invoke-GoogleSearch([Parameter(Position=0, Mandatory=$true, ValueFromRe
             write-host -nonewline -foreground @('white', 'cyan')[($i = -not $i)] $_
         }
         write-host
+    }
 
     $num = if ($n -gt 100) { 100 } else { $n }; $start = 0
     while (!$o -or $start -lt $n) {
