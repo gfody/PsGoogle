@@ -1,7 +1,11 @@
 Add-Type -AssemblyName System.Web
 Add-Type -AssemblyName System.Management.Automation
 
-function Invoke-GoogleSearch([Parameter(Position=0, Mandatory=$true, ValueFromRemainingArguments = $true)][string]$q, [int]$n = 4, [switch]$o) {
+function Invoke-GoogleSearch(
+  [Parameter(Position=0, Mandatory=$true, ValueFromRemainingArguments = $true)]
+  [string]$q,
+  [int]$n = 4,
+  [switch]$o) {
     function parse-results([string]$html) {
         $reg = new-object Text.RegularExpressions.Regex('class="r"><a href="/url\?q=(.*?)&amp;sa=.*?>(.*?)</a.*?<span class="st">(.*?)</span',
             @([Text.RegularExpressions.RegexOptions]::IgnoreCase, [Text.RegularExpressions.RegexOptions]::Singleline, [Text.RegularExpressions.RegexOptions]::Compiled))
@@ -28,8 +32,8 @@ function Invoke-GoogleSearch([Parameter(Position=0, Mandatory=$true, ValueFromRe
         if (!$stats) { if (!$o -and $start -eq 0) { write-host -foreground red "`nno results.`n" }; break }
         $i = $start + 1; $start += $num
         if ($o) { parse-results $raw } else {
-            $info = ([regex]'id="topstuff">(?:<(?!h3)[^>]*?>)+(?![<[])(.+?)</div>').match($raw)
-            if ($info.success) { write-host -foreground green "`n$([Web.HttpUtility]::HtmlDecode(($info.groups[1].value -replace '<.*?>', ' ' -replace ' {2,}', ' ')).Trim())" }
+            $info = ([regex]'id="topstuff">(?:<(?!h3)[^>]*?>)+(?![<[])(.+?)<\/div><div class="\w+\s+\w+">([^<]+)').match($raw)
+            if ($info.success) { write-host -foreground green "`n$([Web.HttpUtility]::HtmlDecode(($info.groups[1,2].value -replace '<.*?>', ' ' -replace ' {2,}', ' ')).Trim())" }
             write-host -foreground yellow "`n$stats`n"
             parse-results $raw | % {
                 write-bold "$(($i++)). $($_.title)"
