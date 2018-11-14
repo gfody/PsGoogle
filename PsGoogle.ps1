@@ -1,7 +1,7 @@
 Add-Type -AssemblyName System.Web
 Add-Type -AssemblyName System.Management.Automation
 
-function google([Parameter(Position=0, Mandatory=$true, ValueFromRemainingArguments = $true)][string]$q, [int]$n = 4, [switch]$o) {
+function Invoke-GoogleSearch([Parameter(Position=0, Mandatory=$true, ValueFromRemainingArguments = $true)][string]$q, [int]$n = 4, [switch]$o) {
     function parse-results([string]$html) {
         $reg = new-object Text.RegularExpressions.Regex('class="r"><a href="/url\?q=(.*?)&amp;sa=.*?>(.*?)</a.*?<span class="st">(.*?)</span',
             @([Text.RegularExpressions.RegexOptions]::IgnoreCase, [Text.RegularExpressions.RegexOptions]::Singleline, [Text.RegularExpressions.RegexOptions]::Compiled))
@@ -19,7 +19,6 @@ function google([Parameter(Position=0, Mandatory=$true, ValueFromRemainingArgume
             write-host -nonewline -foreground @('white', 'cyan')[($i = -not $i)] $_
         }
         write-host
-    }
 
     $num = if ($n -gt 100) { 100 } else { $n }; $start = 0
     while (!$o -or $start -lt $n) {
@@ -38,8 +37,14 @@ function google([Parameter(Position=0, Mandatory=$true, ValueFromRemainingArgume
                 write-host
             }
             if (([regex]'position:-96px 0;width:71px').match($raw).success) {
+                if ($PSISE){
+                  $message = [System.Windows.Forms.MessageBox]::Show("Load more results?","Continue?",4,32)
+                  if ($message -eq "No") {break}
+                }
+                else{
                 write-host "any key for more results, q to quit..`n"
                 if ([Console]::ReadKey($true).Key -eq "q") { break }
+              }
             }
         }
     }
@@ -47,7 +52,7 @@ function google([Parameter(Position=0, Mandatory=$true, ValueFromRemainingArgume
 
 
 if (gcm Register-ArgumentCompleter -ea Ignore) {
-    Register-ArgumentCompleter -Command 'google' -Parameter 'q' -Script {
+    Register-ArgumentCompleter -Command 'Invoke-GoogleSearch' -Parameter 'q' -Script {
         param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameter)
         (irm "https://suggestqueries.google.com/complete/search?output=xml&q=$([Web.HttpUtility]::UrlEncode($wordToComplete))").SelectNodes("/toplevel/CompleteSuggestion/*") | % {
             new-object Management.Automation.CompletionResult($_.data)
