@@ -21,14 +21,18 @@ function write-bold([string]$s) {
     write-host
 }
 
-function Invoke-GoogleSearch{
-  Param(
-  [Parameter(Position=0, Mandatory=$true, ValueFromRemainingArguments = $true)][string]
-  $QueryString,
-  [Parameter(Mandatory=$false)][int]
-  $NumberOfResults = 4,
-  [Parameter(Mandatory=$false)][switch]
-  $Objects
+function Invoke-GoogleSearch {
+  [CmdletBinding()]
+  param (
+    [Parameter(Position=0, Mandatory=$true, ValueFromRemainingArguments = $true)]
+    [string]
+    $QueryString,
+    [Parameter(Mandatory=$false)]
+    [int]
+    $NumberOfResults = 4,
+    [Parameter(Mandatory=$false)]
+    [switch]
+    $Objects
   )
   $num = if ($NumberOfResults -gt 100) { 100 } else { $NumberOfResults }; $start = 0
   while (!$Objects -or $start -lt $NumberOfResults) {
