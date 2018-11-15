@@ -8,7 +8,7 @@
   PrivateData = @{
     PSData = @{
       ProjectUri = 'https://github.com/gfody/PsGoogle'
-      ReleaseNotes = 'Fixed issues #3, #4, #5, #6 (https://github.com/gfody/PsGoogle/issues)'
+      ReleaseNotes = 'Fixed issues #3, #4, #5, #6 (https://github.com/gfody/PsGoogle/issues); added pipelining.'
     }
   }
 }
